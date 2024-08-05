@@ -24,8 +24,8 @@ public class Library {
     }
 
     // Remove a book from the library by title
-    public void removeBook(String title) {
-        books.removeIf(book -> book.getTitle().equalsIgnoreCase(title));
+    public boolean removeBook(String title) {
+        return books.removeIf(book -> book.getTitle().equals(title));
     }
 
     // Find all books published in a specific year
@@ -38,7 +38,7 @@ public class Library {
     // Find all books by a specific author
     public List<Book> findBooksByAuthor(String author) {
         return books.stream()
-                .filter(book -> book.getAuthor().equalsIgnoreCase(author))
+                .filter(book -> book.getAuthor().equals(author))
                 .collect(Collectors.toList());
     }
 
@@ -49,18 +49,18 @@ public class Library {
     }
 
     // Find all books with more than n pages
-    public List<Book> findBooksWithMoreThanPages(int pages) {
+    public List<Book> findBooksByPageCount(int pages) {
         return books.stream()
                 .filter(book -> book.getPages() > pages)
                 .collect(Collectors.toList());
     }
 
     // Print all book titles in the library, sorted alphabetically
-    public void printAllBookTitles() {
-        books.stream()
+    public List<String> getAllBookTitles() {
+        return books.stream()
                 .map(Book::getTitle)
                 .sorted()
-                .forEach(System.out::println);
+                .collect(Collectors.toList());
     }
 
     // Find all books in a specific category
@@ -70,54 +70,35 @@ public class Library {
                 .collect(Collectors.toList());
     }
 
-    // Loan out a book
+    // Loan out a book to a user
     public boolean loanBook(String title, User user) {
-        Optional<Book> bookToLoan = books.stream()
-                .filter(book -> book.getTitle().equalsIgnoreCase(title) && !book.isOnLoan())
-                .findFirst();
-
-        if (bookToLoan.isPresent()) {
-            Book book = bookToLoan.get();
-            book.setOnLoan(true);
-            user.getBooksOnLoan().add(book);
-
-            if (!lendingRecords.containsKey(user)) {
-                lendingRecords.put(user, new HashMap<>());
+        for (Book book : books) {
+            if (book.getTitle().equals(title) && !book.isOnLoan()) {
+                book.setOnLoan(true);
+                user.getBooksOnLoan().add(book);
+                lendingRecords.computeIfAbsent(user, k -> new HashMap<>()).put(book, System.currentTimeMillis());
+                return true;
             }
-            lendingRecords.get(user).put(book, System.currentTimeMillis());
-
-            return true;
         }
         return false;
     }
 
-    // Return a book
+    // Return a book from a user
     public boolean returnBook(String title, User user) {
-        Optional<Book> bookToReturn = user.getBooksOnLoan().stream()
-                .filter(book -> book.getTitle().equalsIgnoreCase(title))
-                .findFirst();
-
-        if (bookToReturn.isPresent()) {
-            Book book = bookToReturn.get();
-            book.setOnLoan(false);
-            user.getBooksOnLoan().remove(book);
-
-            if (lendingRecords.containsKey(user)) {
+        for (Book book : user.getBooksOnLoan()) {
+            if (book.getTitle().equals(title)) {
+                book.setOnLoan(false);
+                user.getBooksOnLoan().remove(book);
                 lendingRecords.get(user).remove(book);
+                return true;
             }
-
-            return true;
         }
         return false;
     }
 
     // Calculate late fees for a user
     public double calculateLateFees(User user) {
-        if (!lendingRecords.containsKey(user)) {
-            return 0.0;
-        }
-
-        double totalLateFees = 0.0;
+        double totalFees = 0;
         long currentTime = System.currentTimeMillis();
 
         for (Map.Entry<Book, Long> entry : lendingRecords.get(user).entrySet()) {
@@ -125,12 +106,11 @@ public class Library {
             long overdueTime = currentTime - loanTime - LOAN_PERIOD;
 
             if (overdueTime > 0) {
-                long overdueDays = overdueTime / (24 * 60 * 60 * 1000);
-                totalLateFees += overdueDays * LATE_FEE_PER_DAY;
+                long overdueDays = (overdueTime / (24 * 60 * 60 * 1000));
+                totalFees += overdueDays * LATE_FEE_PER_DAY;
             }
         }
-
-        return totalLateFees;
+        return totalFees;
     }
 
     // Register a user
@@ -138,4 +118,3 @@ public class Library {
         users.add(user);
     }
 }
-

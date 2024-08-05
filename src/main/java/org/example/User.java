@@ -24,4 +24,3 @@ public class User {
 
     public List<Book> getBooksOnLoan() { return booksOnLoan; }
 }
-
