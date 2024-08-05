@@ -7,6 +7,7 @@ public class Book {
     private int pages;
     private String category;
     private boolean isOnLoan;
+    private long loanTimestamp; // Timestamp when the book was loaned out
 
     // Constructor
     public Book(String title, String author, int publicationYear, int pages, String category) {
@@ -15,25 +16,64 @@ public class Book {
         this.publicationYear = publicationYear;
         this.pages = pages;
         this.category = category;
-        this.isOnLoan = false; // Default to not on loan
+        this.isOnLoan = false;
+        this.loanTimestamp = 0;
     }
 
-    // Getters and Setters
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    // Getters and setters
+    public String getTitle() {
+        return title;
+    }
 
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public int getPublicationYear() { return publicationYear; }
-    public void setPublicationYear(int publicationYear) { this.publicationYear = publicationYear; }
+    public String getAuthor() {
+        return author;
+    }
 
-    public int getPages() { return pages; }
-    public void setPages(int pages) { this.pages = pages; }
+    public void setAuthor(String author) {
+        this.author = author;
+    }
 
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public int getPublicationYear() {
+        return publicationYear;
+    }
 
-    public boolean isOnLoan() { return isOnLoan; }
-    public void setOnLoan(boolean onLoan) { isOnLoan = onLoan; }
+    public void setPublicationYear(int publicationYear) {
+        this.publicationYear = publicationYear;
+    }
+
+    public int getPages() {
+        return pages;
+    }
+
+    public void setPages(int pages) {
+        this.pages = pages;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public boolean isOnLoan() {
+        return isOnLoan;
+    }
+
+    public void setOnLoan(boolean onLoan) {
+        isOnLoan = onLoan;
+    }
+
+    public long getLoanTimestamp() {
+        return loanTimestamp;
+    }
+
+    public void setLoanTimestamp(long loanTimestamp) {
+        this.loanTimestamp = loanTimestamp;
+    }
 }

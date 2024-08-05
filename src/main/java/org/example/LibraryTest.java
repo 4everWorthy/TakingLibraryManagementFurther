@@ -1,30 +1,95 @@
 package org.example;
 
+import org.junit.Test;
+import java.util.concurrent.TimeUnit;
+import static org.junit.Assert.*;
+
 public class LibraryTest {
-    public static void main(String[] args) {
+    @Test
+    public void testAddBook() {
         Library library = new Library();
+        Book book = new Book("Title", "Author", 2020, 300, "Fiction");
+        library.addBook(book);
+        assertEquals(1, library.findBooksByYear(2020).size());
+    }
 
-        // Add manga titles to the library
-        Book manga1 = new Book("Naruto", "Masashi Kishimoto", 1999, 220, "Shonen");
-        Book manga2 = new Book("One Piece", "Eiichiro Oda", 1997, 230, "Shonen");
-        Book manga3 = new Book("Attack on Titan", "Hajime Isayama", 2009, 210, "Shonen");
+    @Test
+    public void testRemoveBook() {
+        Library library = new Library();
+        Book book = new Book("Title", "Author", 2020, 300, "Fiction");
+        library.addBook(book);
+        library.removeBook("Title");
+        assertEquals(0, library.findBooksByYear(2020).size());
+    }
 
-        library.addBook(manga1);
-        library.addBook(manga2);
-        library.addBook(manga3);
+    @Test
+    public void testFindBooksByYear() {
+        Library library = new Library();
+        Book book1 = new Book("Title1", "Author1", 2020, 300, "Fiction");
+        Book book2 = new Book("Title2", "Author2", 2021, 400, "Non-Fiction");
+        library.addBook(book1);
+        library.addBook(book2);
+        assertEquals(1, library.findBooksByYear(2020).size());
+        assertEquals(1, library.findBooksByYear(2021).size());
+    }
 
-        // Register a user
-        User user1 = new User("Alice", "12345");
-        library.registerUser(user1);
+    @Test
+    public void testFindBooksByAuthor() {
+        Library library = new Library();
+        Book book1 = new Book("Title1", "Author1", 2020, 300, "Fiction");
+        Book book2 = new Book("Title2", "Author2", 2021, 400, "Non-Fiction");
+        library.addBook(book1);
+        library.addBook(book2);
+        assertEquals(1, library.findBooksByAuthor("Author1").size());
+        assertEquals(1, library.findBooksByAuthor("Author2").size());
+    }
 
-        // Perform various library operations with manga titles
-        System.out.println("Manga by Masashi Kishimoto: " + library.findBooksByAuthor("Masashi Kishimoto"));
-        System.out.println("Manga published in 1997: " + library.findBooksByYear(1997));
-        System.out.println("Manga with most pages: " + library.findBookWithMostPages().orElse(null));
+    @Test
+    public void testFindBookWithMostPages() {
+        Library library = new Library();
+        Book book1 = new Book("Title1", "Author1", 2020, 300, "Fiction");
+        Book book2 = new Book("Title2", "Author2", 2021, 400, "Non-Fiction");
+        library.addBook(book1);
+        library.addBook(book2);
+        assertEquals("Title2", library.findBookWithMostPages().getTitle());
+    }
 
-        System.out.println("Loaning 'Naruto' to Alice: " + library.loanBook("Naruto", user1));
-        System.out.println("Loaning 'Naruto' again: " + library.loanBook("Naruto", user1));
-        System.out.println("Returning 'Naruto' from Alice: " + library.returnBook("Naruto", user1));
-        System.out.println("Late fees for Alice: " + library.calculateLateFees(user1));
+    @Test
+    public void testFindBooksWithMoreThanNPages() {
+        Library library = new Library();
+        Book book1 = new Book("Title1", "Author1", 2020, 300, "Fiction");
+        Book book2 = new Book("Title2", "Author2", 2021, 400, "Non-Fiction");
+        library.addBook(book1);
+        library.addBook(book2);
+        assertEquals(1, library.findBooksWithMoreThanNPages(350).size());
+    }
+
+    @Test
+    public void testLoanAndReturnBook() {
+        Library library = new Library();
+        User user = new User("John Doe", 12345);
+        library.addUser(user);
+        Book book = new Book("Title", "Author", 2020, 300, "Fiction");
+        library.addBook(book);
+        library.loanBook("Title", user);
+        assertTrue(book.isOnLoan());
+        library.returnBook("Title", user);
+        assertFalse(book.isOnLoan());
+    }
+
+    @Test
+    public void testLateFees() {
+        Library library = new Library();
+        User user = new User("John Doe", 12345);
+        library.addUser(user);
+        Book book = new Book("Title", "Author", 2020, 300, "Fiction");
+        library.addBook(book);
+        user.loanBook(book);
+
+        // Simulate loan duration of 20 days
+        book.setLoanTimestamp(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(20));
+        user.returnBook(book);
+
+        assertEquals(3.0, user.getLateFees(), 0.01); // 6 days late * $0.50 = $3.00
     }
 }

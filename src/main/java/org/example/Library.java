@@ -1,21 +1,17 @@
 package org.example;
 
-import java.util.*;
-import java.util.function.Predicate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class Library {
     private List<Book> books;
     private List<User> users;
-    private Map<User, Map<Book, Long>> lendingRecords;
-    private static final long LOAN_PERIOD = 14 * 24 * 60 * 60 * 1000; // 2 weeks in milliseconds
-    private static final double LATE_FEE_PER_DAY = 1.0; // Fee per day
 
-    // Constructor
     public Library() {
-        books = new ArrayList<>();
-        users = new ArrayList<>();
-        lendingRecords = new HashMap<>();
+        this.books = new ArrayList<>();
+        this.users = new ArrayList<>();
     }
 
     // Add a book to the library
@@ -23,9 +19,9 @@ public class Library {
         books.add(book);
     }
 
-    // Remove a book from the library by title
-    public boolean removeBook(String title) {
-        return books.removeIf(book -> book.getTitle().equals(title));
+    // Remove a book by title
+    public void removeBook(String title) {
+        books.removeIf(book -> book.getTitle().equals(title));
     }
 
     // Find all books published in a specific year
@@ -43,78 +39,60 @@ public class Library {
     }
 
     // Find the book with the most pages
-    public Optional<Book> findBookWithMostPages() {
+    public Book findBookWithMostPages() {
         return books.stream()
-                .max(Comparator.comparingInt(Book::getPages));
+                .max(Comparator.comparingInt(Book::getPages))
+                .orElse(null);
     }
 
     // Find all books with more than n pages
-    public List<Book> findBooksByPageCount(int pages) {
+    public List<Book> findBooksWithMoreThanNPages(int n) {
         return books.stream()
-                .filter(book -> book.getPages() > pages)
+                .filter(book -> book.getPages() > n)
                 .collect(Collectors.toList());
     }
 
-    // Print all book titles in the library, sorted alphabetically
-    public List<String> getAllBookTitles() {
-        return books.stream()
+    // Print all book titles in the library sorted alphabetically
+    public void printAllBookTitles() {
+        books.stream()
                 .map(Book::getTitle)
                 .sorted()
-                .collect(Collectors.toList());
+                .forEach(System.out::println);
     }
 
     // Find all books in a specific category
     public List<Book> findBooksByCategory(String category) {
         return books.stream()
-                .filter(book -> book.getCategory().equalsIgnoreCase(category))
+                .filter(book -> book.getCategory().equals(category))
                 .collect(Collectors.toList());
     }
 
-    // Loan out a book to a user
-    public boolean loanBook(String title, User user) {
-        for (Book book : books) {
-            if (book.getTitle().equals(title) && !book.isOnLoan()) {
-                book.setOnLoan(true);
-                user.getBooksOnLoan().add(book);
-                lendingRecords.computeIfAbsent(user, k -> new HashMap<>()).put(book, System.currentTimeMillis());
-                return true;
-            }
-        }
-        return false;
+    // Loan out a book
+    public void loanBook(String title, User user) {
+        books.stream()
+                .filter(book -> book.getTitle().equals(title) && !book.isOnLoan())
+                .findFirst()
+                .ifPresent(book -> user.loanBook(book));
     }
 
-    // Return a book from a user
-    public boolean returnBook(String title, User user) {
-        for (Book book : user.getBooksOnLoan()) {
-            if (book.getTitle().equals(title)) {
-                book.setOnLoan(false);
-                user.getBooksOnLoan().remove(book);
-                lendingRecords.get(user).remove(book);
-                return true;
-            }
-        }
-        return false;
+    // Return a book
+    public void returnBook(String title, User user) {
+        books.stream()
+                .filter(book -> book.getTitle().equals(title) && book.isOnLoan())
+                .findFirst()
+                .ifPresent(book -> user.returnBook(book));
     }
 
-    // Calculate late fees for a user
-    public double calculateLateFees(User user) {
-        double totalFees = 0;
-        long currentTime = System.currentTimeMillis();
-
-        for (Map.Entry<Book, Long> entry : lendingRecords.get(user).entrySet()) {
-            long loanTime = entry.getValue();
-            long overdueTime = currentTime - loanTime - LOAN_PERIOD;
-
-            if (overdueTime > 0) {
-                long overdueDays = (overdueTime / (24 * 60 * 60 * 1000));
-                totalFees += overdueDays * LATE_FEE_PER_DAY;
-            }
-        }
-        return totalFees;
-    }
-
-    // Register a user
-    public void registerUser(User user) {
+    // Add a user to the library
+    public void addUser(User user) {
         users.add(user);
+    }
+
+    // Find a user by library card number
+    public User findUser(int libraryCardNumber) {
+        return users.stream()
+                .filter(user -> user.getLibraryCardNumber() == libraryCardNumber)
+                .findFirst()
+                .orElse(null);
     }
 }
